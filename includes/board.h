@@ -30,7 +30,6 @@
 #include<windows.h>
 #endif
 #include<cstring>
-#include<unordered_map>
 #include<ctime>
 #include<algorithm>
 #define SIZE 8

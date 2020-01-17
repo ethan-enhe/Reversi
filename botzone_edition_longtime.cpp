@@ -4,12 +4,12 @@
 #include<windows.h>
 #endif
 #include<cstring>
-#include<unordered_map>
 #include<ctime>
 #include<algorithm>
-#define MAX_SEARCH 12
 #define SIZE 8
 #define NR 10
+#define MAX_SEARCH 12
+#define HT_SIZE 1000000
 const int nxgo[8][2]={{-1,1},{-1,0},{-1,-1},{0,1},{1,-1},{1,0},{1,1},{0,-1}};
 double train_speed=1;
 const int terrain[10][10]={
@@ -24,23 +24,31 @@ const int terrain[10][10]={
 	{  0, 100, -50, 20, 10, 10, 20, -50, 100},
 	{  0,   0,   0,  0,  0,  0,  0,   0,   0}
 };
-bool cmp1(std::pair<int, double> x, std::pair<int, double> y){
-	return x.second > y.second;
+unsigned long long board_hash[2][10][10]={
+{
+	{0U,0U,0U,0U,0U,0U,0U,0U,0U,0},
+	{0U,6880564125076973460U,8324189626661103252U,18273013313536353004U,9680968481607266591U,5492320330231943804U,1249362745900412647U,160179827196583684U,6681710116497670309U,0},
+	{0U,1508769556914029984U,15415643906805116207U,486100235785905806U,9947246947985066330U,14593476464710908444U,5204558755076186142U,9193345226612537840U,18039998673436205159U,0},
+	{0U,4807433278066979240U,1635706424295147269U,11758715261254788729U,9453572104691090370U,17599186514115795539U,17218040696116590974U,7825202553757965241U,11331629225907237345U,0},
+	{0U,2920812594559588416U,11280620404528885234U,2075229208224760943U,9230542178674550209U,4677042827364327542U,287918573564643801U,9147171852733279732U,14772579261011096114U,0},
+	{0U,17511384049467264954U,15672751083188213461U,11120284664497817925U,15807033665981183858U,5987058041098856561U,17134698507899238288U,11956823493740220549U,2528957373664062997U,0},
+	{0U,7824177812580278938U,24611691876890470U,12138132438791167003U,11347041215002591799U,13330524194470656193U,2543636495829569510U,16208975603279458898U,3252764369285659128U,0},
+	{0U,2531180725562481936U,5549910741902475019U,10087486789654011021U,2323624920730739276U,2333723648593396068U,11689786842637011288U,9410669541618633983U,1626756346365148430U,0},
+	{0U,7855006699904867692U,4468248172647203502U,13274692541110870001U,7924942984322083681U,14943013835775188439U,12552325516060801269U,8013377263012184989U,4380232981446971238U,0},
+	{0U,0U,0U,0U,0U,0U,0U,0U,0U,0}
+},
+{
+	{0U,0U,0U,0U,0U,0U,0U,0U,0U,0},
+	{0U,14551515592020777080U,4823849562544556286U,10011598329503054321U,3276394181865583935U,480837640536690263U,9616561975051951394U,16413619954229161241U,16102083386597509907U,0},
+	{0U,16455655125709783132U,13097603048799968574U,2557769112663562518U,14372140218105605893U,8668602070843897104U,14959307820543376574U,4147621103451302130U,4873987076167870808U,0},
+	{0U,16776072393217450276U,6501928437302794753U,11831266000601400607U,2108218376515158235U,10521432051942128004U,7994370536239934554U,4549610295612737039U,10796029931026892250U,0},
+	{0U,14494284575743034679U,1082037426959292057U,12609244668461923358U,10447887621414465285U,15458067462460738064U,4712924002240162083U,9475785636554852293U,17427659223159092084U,0},
+	{0U,5650587863820349216U,6174135021917560474U,15579136525968145686U,6160515218314710192U,8452137823063306241U,6144106305003052551U,12708933124641721736U,16399122017912212421U,0},
+	{0U,13737281093197659106U,14529551438036159895U,8554208011544343312U,11905853981891980393U,11809755174055254888U,13414322181094031590U,15366286782272460671U,6742129215521329446U,0},
+	{0U,17754267428286986321U,14564332153346477519U,17542883574078649140U,16964851541241254805U,15550219440551551472U,6620732655983792846U,8888147703720615446U,17519482211064239010U,0},
+	{0U,11258952966829779303U,13581543917194656235U,9084085038834421212U,2263737883562340577U,7803221793363816630U,5160131817510830895U,15677181952285801626U,15928173089446975721U,0},
+	{0U,0U,0U,0U,0U,0U,0U,0U,0U,0}
 }
-bool cmp2(std::pair<int, double> x, std::pair<int, double> y){
-	return x.second < y.second;
-}
-const int board_hash[10][10]={
-	{0,0,0,0,0,0,0,0,0,0},
-	{0,702167748,1149044463,376632294,336103763,1955888354,1981172283,1200258070,854575395,0},
-	{0,1770695626,891634434,1315914244,446775943,1674990609,423196531,1618746640,1551799625,0},
-	{0,1697938058,1031271398,316663619,267068920,1496174412,117465739,1781814210,315825807,0},
-	{0,245216013,231532836,1911322891,1207785950,453979669,1594382150,1819508382,1976852440,0},
-	{0,1791853837,32505261,1955901964,113280860,690570681,523895244,459790227,1995621976,0},
-	{0,1469867151,919910822,851227755,1337858871,1816121645,996917559,583917597,470625806,0},
-	{0,2047904629,653235578,514479328,1391062239,340955792,659896276,495870009,884414431,0},
-	{0,1374265997,1214525556,30903131,1873004895,835701320,1777751367,1054298401,392221640,0},
-	{0,0,0,0,0,0,0,0,0,0}
 };
 const double trained[60][3]={
 	{200.000000,50.000000,300.000000},
@@ -104,16 +112,31 @@ const double trained[60][3]={
 	{29.889959,584.274759,2175.681438},
 	{13.191873,-344.460105,2185.081120}
 };
+struct s_result{
+	unsigned long long hash;
+	double low,high;
+	int bx,by,depth;
+	s_result(unsigned long long hash=0,double low=-1e9,double high=1e9,int bx=-1,int by=-1,int depth=-1):hash(hash),low(low),high(high),bx(bx),by(by),depth(depth){}
+};
+struct s_save{
+	s_result deepest,newest;
+}hashtable[HT_SIZE];
+bool cmp1(std::pair<int, double> x, std::pair<int, double> y){
+	return x.second > y.second;
+}
+bool cmp2(std::pair<int, double> x, std::pair<int, double> y){
+	return x.second < y.second;
+}
 struct Reversi_Board{
 	/*
 	 * 先手  1 黑棋
 	 * 后手 -1 白棋
 	 * 空地  0
 	 */
-	int board[NR][NR],step,hash1,hash_1;
+	unsigned long long hash;
+	int board[NR][NR],step;
 	inline bool inboard(int x,int y){return (x>0 && x<=SIZE && y>0 && y<=SIZE);}
 	double w[64][3];
-	std::unordered_map<long long,std::pair<int,double> > saved_w;
 
 	//init & print
 	Reversi_Board(){
@@ -124,23 +147,22 @@ struct Reversi_Board{
 		memset(board,0,sizeof(board));
 		board[4][4]=board[5][5]=-1;
 		board[4][5]=board[5][4]=1;
-		hash_1=0,hash1=0;
-		hash_1^=board_hash[4][4];
-		hash_1^=board_hash[5][5];
-		hash1^=board_hash[4][5];
-		hash1^=board_hash[5][4];
+		hash=0;
+		hash^=board_hash[0][4][4];
+		hash^=board_hash[0][5][5];
+		hash^=board_hash[1][4][5];
+		hash^=board_hash[1][5][4];
 		srand(time(NULL));
 	}
 	Reversi_Board(int arr[NR][NR]){
-		hash_1=0,hash1=0;
+		hash=0;
 		step=-4;
 		for(int i=1;i<=SIZE;i++)
 			for(int j=1;j<=SIZE;j++){
 				board[i][j]=arr[i][j];
 				if(arr[i][j]){
 					step++;
-					if(arr[i][j]==-1)hash_1^=board_hash[i][j];
-					else hash1^=board_hash[i][j];
+					hash^=board_hash[(arr[i][j]+1)>>1][i][j];
 				}
 			}
 	}
@@ -149,11 +171,11 @@ struct Reversi_Board{
 		memset(board,0,sizeof(board));
 		board[4][4]=board[5][5]=-1;
 		board[4][5]=board[5][4]=1;
-		hash_1=0,hash1=0;
-		hash_1^=board_hash[4][4];
-		hash_1^=board_hash[5][5];
-		hash1^=board_hash[4][5];
-		hash1^=board_hash[5][4];
+		hash=0;
+		hash^=board_hash[0][4][4];
+		hash^=board_hash[0][5][5];
+		hash^=board_hash[1][4][5];
+		hash^=board_hash[1][5][4];
 	}
 
 #ifdef _WIN32
@@ -259,14 +281,47 @@ struct Reversi_Board{
 	
 
 	//Calculation
-	inline long long curhash(){return (long long)(hash1<<31)|hash_1;}
-
-	inline bool have_saved(){return saved_w.find(curhash())!=saved_w.end();}
-	inline void save_w(int deep,double curw){
-		if(!have_saved())
-			saved_w[curhash()]=std::make_pair(deep,curw);
-		else if(saved_w[curhash()].first<deep)
-			saved_w[curhash()]=std::make_pair(deep,curw);
+	void hash_save(double low,double high,int bx,int by,int depth){
+		unsigned int place=(hash)%HT_SIZE;
+		if(hashtable[place].deepest.hash==hash && hashtable[place].deepest.depth==depth){
+			if(hashtable[place].deepest.low<low){
+				hashtable[place].deepest.low=low;
+				hashtable[place].deepest.bx=bx;
+				hashtable[place].deepest.by=by;
+			}
+			hashtable[place].deepest.high=std::min(hashtable[place].deepest.high,high);
+		}
+		else if(hashtable[place].newest.hash==hash && hashtable[place].newest.depth==depth){
+			if(hashtable[place].newest.low<low){
+				hashtable[place].newest.low=low;
+				hashtable[place].newest.bx=bx;
+				hashtable[place].newest.by=by;
+			}
+			hashtable[place].newest.high=std::min(hashtable[place].newest.high,high);
+		}
+		else if(depth>hashtable[place].deepest.depth){
+			hashtable[place].newest=hashtable[place].deepest;
+			hashtable[place].deepest.hash=hash;
+			hashtable[place].deepest.low=low;
+			hashtable[place].deepest.high=high;
+			hashtable[place].deepest.bx=bx;
+			hashtable[place].deepest.by=by;
+			hashtable[place].deepest.depth=depth;
+		}
+		else{
+			hashtable[place].deepest.hash=hash;
+			hashtable[place].newest.low=low;
+			hashtable[place].newest.high=high;
+			hashtable[place].newest.bx=bx;
+			hashtable[place].newest.by=by;
+			hashtable[place].newest.depth=depth;
+		}
+	}
+	s_result hash_get(int depth){
+		unsigned int place=(hash)%HT_SIZE;
+		if(hashtable[place].deepest.hash==hash && hashtable[place].deepest.depth==depth)return hashtable[place].deepest;
+		else if(hashtable[place].newest.hash==hash && hashtable[place].newest.depth==depth)return hashtable[place].newest;
+		else return s_result();
 	}
 
 	/*
@@ -315,8 +370,8 @@ struct Reversi_Board{
 					tx=x+nxgo[pos][0],ty=y+nxgo[pos][1];
 					while(inboard(tx,ty) && board[tx][ty]==-cur){
 						board[tx][ty]=cur;
-						hash1^=board_hash[tx][ty];
-						hash_1^=board_hash[tx][ty];
+						hash^=board_hash[0][tx][ty];
+						hash^=board_hash[1][tx][ty];
 						tx=tx+nxgo[pos][0];
 						ty=ty+nxgo[pos][1];
 					}
@@ -374,7 +429,6 @@ struct Reversi_Board{
 	 * 对于cur，棋局状态如何
 	 */
 	inline double assess(int cur){
-		if(have_saved())return saved_w[curhash()].second;
 		int iswin=win();
 		double ans;
 		if(iswin!=-2){
@@ -385,7 +439,6 @@ struct Reversi_Board{
 		else ans=w[step][0]*(terr(cur)-terr(-cur))+
 			w[step][1]*(choice(cur)-choice(-cur))+
 			w[step][2]*(not_threated(cur)-not_threated(-cur));
-		save_w(0,ans);
 		return ans;
 	}
 	void train(double o,double t,int cur){
@@ -407,8 +460,7 @@ struct Reversi_Board{
 		if(!inboard(x,y) || board[x][y])return 0;
 		step++;
 		board[x][y]=cur;
-		if(cur==1)hash1^=board_hash[x][y];
-		else hash_1^=board_hash[x][y];
+		hash^=board_hash[(cur+1)>>1][x][y];
 		eat(1,x,y,cur);
 		return 1;
 	}
@@ -427,15 +479,15 @@ struct Reversi_Board{
 				}
 			}
 	}
-	std::pair<std::pair<int, int>, double> min_max(Reversi_Board nowBoard, int depth, bool isMax, double alpha, double beta){ //返回一个坐标 和 最大/最小权值
+	s_result min_max(Reversi_Board nowBoard, int depth, bool isMax, double alpha, double beta){ //返回一个坐标 和 最大/最小权值
 		bool flag = false;
 		if (depth == 0){
-			return std::make_pair(std::make_pair(-1, -1), nowBoard.assess(1));
+			double res=nowBoard.assess(1);
+			return s_result(nowBoard.hash,res,res,-1,-1,0);
 		}
 		int winn = nowBoard.win();
-		if (winn != -2){
-			return std::make_pair(std::make_pair(0, 0), winn * 100000);
-		}
+		if (winn != -2)
+			return s_result(s_result(nowBoard.hash,winn * 100000,winn * 100000,-1,-1,0));
 		std::pair <int, int> pr[151]; //x & y
 		std::pair <int, double> pr2[151]; // id & weight
 		int cur = isMax ? 1: -1;
@@ -458,7 +510,7 @@ struct Reversi_Board{
 			flag = true;
 			Reversi_Board nxtBoard = nowBoard;
 			nxtBoard.putchess(nx, ny, cur);
-			double weight = min_max(nxtBoard, depth - 1, !isMax, alpha, beta).second;
+			double weight = hash_min_max(nxtBoard, depth - 1, !isMax, alpha, beta).low;
 			if (isMax && weight > fnlWght){
 				fnlChs = std::make_pair(nx, ny);
 				fnlWght = weight;
@@ -471,16 +523,55 @@ struct Reversi_Board{
 			}
 			if (beta <= alpha) break;
 		}
-		if (!flag) fnlWght=min_max(nowBoard, depth, !isMax, alpha, beta).second;
-		nowBoard.save_w(depth, fnlWght);
-		return std::make_pair(fnlChs, fnlWght);	
+		if (!flag) fnlWght=hash_min_max(nowBoard, depth, !isMax, alpha, beta).low;
+		return s_result(nowBoard.hash,fnlWght,fnlWght,fnlChs.first,fnlChs.second,depth);
+	}
+	s_result hash_min_max(Reversi_Board nowBoard, int depth, bool isMax, double alpha, double beta){ //返回一个坐标 和 最大/最小权值
+
+		s_result cur_his=nowBoard.hash_get(depth);
+		if(cur_his.depth!=-1){
+			if(alpha<cur_his.low){
+				alpha=cur_his.low;
+				if(alpha>=beta)return s_result(nowBoard.hash,alpha,alpha,cur_his.bx,cur_his.by,depth);
+			}
+			if(beta>cur_his.high){
+				beta=cur_his.high;
+				if(alpha>=beta)return s_result(nowBoard.hash,beta,beta,cur_his.bx,cur_his.by,depth);
+			}
+		}
+		s_result full_res=min_max(nowBoard, depth, isMax, alpha, beta);
+		double cur_w=full_res.low;
+		if(cur_w>beta)
+			nowBoard.hash_save(cur_w,1e9,full_res.bx,full_res.by,depth);
+		else if(cur_w<alpha)
+			nowBoard.hash_save(-1e9,cur_w,full_res.bx,full_res.by,depth);
+		else 
+			nowBoard.hash_save(cur_w,cur_w,full_res.bx,full_res.by,depth);
+		return full_res;
+	}
+	s_result mtd(int cur,int depth){
+		int test=0,alpha=-1e9,beta=1e9;
+		int answ;
+		s_result res;
+		int bx=-1,by=-1;
+		do {
+			res = hash_min_max(*this, depth, (cur + 1) >> 1, test-1, test);
+			answ=res.low;
+			if (answ < test)test = beta = answ;
+			else {
+				alpha = answ;
+				test = answ + 1;
+				bx=res.bx,by=res.by;
+			}
+		} while (alpha < beta);
+		return s_result(hash,answ,answ,bx,by,-1);
 	}
 	std::pair<int, int> auto_putchess(int cur){
-		std::pair<int, int> pr;
-		if(step>=49)pr=min_max(*this, 6, (cur + 1) >> 1, -1e9, 1e9).first;
-		else pr=min_max(*this, 5, (cur + 1) >> 1, -1e9, 1e9).first;
-		putchess(pr.first, pr.second, cur);
-		return pr;
+		s_result pr;
+		if(step>=50)pr=mtd(cur,7);
+		else pr=mtd(cur,5);
+		putchess(pr.bx, pr.by, cur);
+		return std::make_pair(pr.bx, pr.by);
 	}
 };
 #include<fstream>
