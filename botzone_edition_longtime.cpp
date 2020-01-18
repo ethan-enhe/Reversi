@@ -550,17 +550,16 @@ struct Reversi_Board{
 		return full_res;
 	}
 	s_result mtd(int cur,int depth){
-		int test=0,alpha=-1e9,beta=1e9;
-		int answ;
+		double test=0,alpha=-1e9,beta=1e9,answ;
 		s_result res;
 		int bx=-1,by=-1;
 		do {
-			res = hash_min_max(*this, depth, (cur + 1) >> 1, test-1, test);
+			res = hash_min_max(*this, depth, (cur + 1) >> 1, test-0.01, test);
 			answ=res.low;
 			if (answ < test)test = beta = answ;
 			else {
 				alpha = answ;
-				test = answ + 1;
+				test = answ + 0.01;
 				bx=res.bx,by=res.by;
 			}
 		} while (alpha < beta);
@@ -568,12 +567,13 @@ struct Reversi_Board{
 	}
 	std::pair<int, int> auto_putchess(int cur){
 		s_result pr;
-		if(step>=50)pr=mtd(cur,7);
+		if(step>=48)pr=mtd(cur,7);
 		else pr=mtd(cur,5);
 		putchess(pr.bx, pr.by, cur);
 		return std::make_pair(pr.bx, pr.by);
 	}
 };
+
 #include<fstream>
 int n;
 int tx,ty;
